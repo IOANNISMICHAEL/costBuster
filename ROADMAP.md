@@ -21,7 +21,6 @@
 ## v1.1 (planned)
 
 - Anthropic `_cost.json` file support
-- Cursor IDE parser (when/if token metadata is added to transcripts)
 - Collapsible table sections
 - Per-session drill-down view
 
