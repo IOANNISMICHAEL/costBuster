@@ -1,6 +1,6 @@
 # CostBuster
 
-Local dashboard for tracking your Anthropic and OpenAI API usage costs. Reads local logs and optionally syncs with the Anthropic Usage & Cost Admin API.
+Local dashboard for tracking your Anthropic and OpenAI API usage costs. Reads local logs, syncs with the Anthropic Usage & Cost Admin API, synchs with OpenAI keys, can read imported CSVs with usage data from Claude/openAi exports.
 
 ## Quick Start
 
