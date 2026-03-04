@@ -1,0 +1,4 @@
+date,model,num_requests,prompt_tokens,completion_tokens,total_tokens,cost_usd
+2025-11-01,gpt-4o,45,52000,12000,64000,1.23
+2025-11-02,gpt-4o-mini,120,80000,20000,100000,0.45
+2025-11-03,gpt-4,5,3000,1500,4500,0.18

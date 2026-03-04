@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CostBuster — API Usage Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='none' stroke='%23e8772e' stroke-width='1.5'/><path d='M18.5 6L12 17h5.5L13.5 26l8-11h-5.5L18.5 6z' fill='%23e8772e'/></svg>">
+  <link rel="stylesheet" href="style.css?v=13">
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
+    integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC"
+    crossorigin="anonymous"></script>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="15" stroke="currentColor" stroke-width="1.5" fill="none" style="color:var(--accent)"/>
+          <path d="M18.5 6L12 17h5.5L13.5 26l8-11h-5.5L18.5 6z" fill="var(--accent)"/>
+        </svg>
+        <h1>CostBuster</h1>
+      </div>
+
+      <div class="header-center">
+        <div class="provider-chips">
+          <button class="chip active" data-provider="all">All</button>
+          <button class="chip" data-provider="anthropic">Anthropic Local</button>
+          <button class="chip" data-provider="anthropic-api">Anthropic API</button>
+          <button class="chip" data-provider="openai">OpenAI</button>
+        </div>
+        <div class="filter-group">
+          <label for="date-from">From</label>
+          <input type="date" id="date-from">
+          <label for="date-to">To</label>
+          <input type="date" id="date-to">
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="export-btn" title="Export all records as CSV">Export</button>
+        <button id="refresh-btn" title="Refresh data">Refresh</button>
+        <button id="settings-btn" title="Data source settings">Settings</button>
+        <button id="theme-toggle" title="Toggle dark/light mode">Theme</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="loading">Loading data…</div>
+    <div id="error" class="error hidden"></div>
+
+    <div id="empty-state" class="hidden">
+      <div class="empty-state-inner">
+        <h2>Welcome to CostBuster</h2>
+        <p>No usage data found. Configure your data sources to get started.</p>
+        <button id="empty-settings-btn" class="btn-primary">Configure Data Sources</button>
+      </div>
+    </div>
+
+    <section id="summary-section" class="hidden">
+      <div id="summary-cards" class="card-grid"></div>
+    </section>
+
+    <section id="charts-section" class="hidden">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Daily Cost</h3>
+          <canvas id="daily-chart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Cost by Model</h3>
+          <canvas id="model-chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="tables-section" class="hidden">
+      <div class="tab-panel">
+        <nav class="tab-bar" role="tablist" aria-label="Data tables">
+          <button class="tab active" data-tab="by-day" role="tab" aria-selected="true" aria-controls="pane-by-day">By Day</button>
+          <button class="tab" data-tab="by-model" role="tab" aria-selected="false" aria-controls="pane-by-model">By Model</button>
+          <button class="tab" data-tab="by-project" role="tab" aria-selected="false" aria-controls="pane-by-project">By Project</button>
+          <button class="tab" data-tab="by-apikey" role="tab" aria-selected="false" aria-controls="pane-by-apikey">By API Key</button>
+          <button class="tab" data-tab="by-session" role="tab" aria-selected="false" aria-controls="pane-by-session">Sessions</button>
+          <button class="tab" data-tab="top-prompts" role="tab" aria-selected="false" aria-controls="pane-top-prompts">Top Prompts</button>
+          <button class="tab" data-tab="insights" role="tab" aria-selected="false" aria-controls="pane-insights">Insights</button>
+        </nav>
+        <div class="tab-content">
+
+          <div class="tab-pane active" id="pane-by-day" role="tabpanel">
+            <div class="table-controls"><input type="text" class="table-search" placeholder="Filter…" data-table="by-day-table"></div>
+            <div class="table-wrap">
+              <table id="by-day-table" class="sortable">
+                <thead><tr>
+                  <th data-col="key" data-type="string">Date</th>
+                  <th data-col="count" data-type="number">Requests</th>
+                  <th data-col="inputTokens" data-type="number">Input Tokens</th>
+                  <th data-col="outputTokens" data-type="number">Output Tokens</th>
+                  <th data-col="cacheRead" data-type="number">Cache Read</th>
+                  <th data-col="cacheWrite" data-type="number">Cache Write</th>
+                  <th data-col="cost" data-type="number">Cost ($)</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="pane-by-model" role="tabpanel">
+            <div class="table-controls"><input type="text" class="table-search" placeholder="Filter…" data-table="by-model-table"></div>
+            <div class="table-wrap">
+              <table id="by-model-table" class="sortable">
+                <thead><tr>
+                  <th data-col="key" data-type="string">Model</th>
+                  <th data-col="count" data-type="number">Requests</th>
+                  <th data-col="inputTokens" data-type="number">Input Tokens</th>
+                  <th data-col="outputTokens" data-type="number">Output Tokens</th>
+                  <th data-col="cacheRead" data-type="number">Cache Read</th>
+                  <th data-col="cacheWrite" data-type="number">Cache Write</th>
+                  <th data-col="cost" data-type="number">Cost ($)</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="pane-by-project" role="tabpanel">
+            <div class="table-controls"><input type="text" class="table-search" placeholder="Filter…" data-table="by-project-table"></div>
+            <div class="table-wrap">
+              <table id="by-project-table" class="sortable">
+                <thead><tr>
+                  <th data-col="key" data-type="string">Project</th>
+                  <th data-col="count" data-type="number">Requests</th>
+                  <th data-col="inputTokens" data-type="number">Input Tokens</th>
+                  <th data-col="outputTokens" data-type="number">Output Tokens</th>
+                  <th data-col="cacheRead" data-type="number">Cache Read</th>
+                  <th data-col="cacheWrite" data-type="number">Cache Write</th>
+                  <th data-col="cost" data-type="number">Cost ($)</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="pane-by-apikey" role="tabpanel">
+            <div class="table-controls"><input type="text" class="table-search" placeholder="Filter…" data-table="by-apikey-table"></div>
+            <div class="table-wrap">
+              <table id="by-apikey-table" class="sortable">
+                <thead><tr>
+                  <th data-col="key" data-type="string">API Key</th>
+                  <th data-col="count" data-type="number">Requests</th>
+                  <th data-col="inputTokens" data-type="number">Input Tokens</th>
+                  <th data-col="outputTokens" data-type="number">Output Tokens</th>
+                  <th data-col="cacheRead" data-type="number">Cache Read</th>
+                  <th data-col="cacheWrite" data-type="number">Cache Write</th>
+                  <th data-col="cost" data-type="number">Cost ($)</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="pane-by-session" role="tabpanel">
+            <div class="table-controls"><input type="text" class="table-search" placeholder="Filter…" data-table="by-session-table"></div>
+            <div class="table-wrap">
+              <table id="by-session-table" class="sortable">
+                <thead><tr>
+                  <th data-col="provider" data-type="string">Provider</th>
+                  <th data-col="sessionId" data-type="string">Session</th>
+                  <th data-col="count" data-type="number">Requests</th>
+                  <th data-col="inputTokens" data-type="number">Input Tokens</th>
+                  <th data-col="outputTokens" data-type="number">Output Tokens</th>
+                  <th data-col="cost" data-type="number">Cost ($)</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="pane-top-prompts" role="tabpanel">
+            <div class="table-wrap">
+              <table id="top-prompts-table">
+                <thead><tr>
+                  <th>Provider</th>
+                  <th>Model</th>
+                  <th>Input Tokens</th>
+                  <th>Output Tokens</th>
+                  <th>Cost ($)</th>
+                  <th>Snippet</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-pane" id="pane-insights" role="tabpanel">
+            <ul id="insights-list" class="insights-list"></ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="warnings-section" class="hidden">
+      <ul id="warnings-list"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>CostBuster v1 — Local dashboard, optional API sync. <span id="meta-info"></span></p>
+  </footer>
+
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+      <div class="modal-header">
+        <h2 id="settings-modal-title">Data Sources</h2>
+        <button id="settings-close" class="modal-close" title="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h3 class="settings-section-title">Anthropic Local (Claude Code)</h3>
+        <div class="setting-group">
+          <label for="set-anthropic-dir">Data directory</label>
+          <div class="setting-input-row">
+            <input type="text" id="set-anthropic-dir" placeholder="~/.claude">
+            <span class="validate-indicator" id="val-anthropic-dir"></span>
+          </div>
+          <p class="setting-hint">Path to your Claude Code data (contains projects/ and history.jsonl)</p>
+        </div>
+
+        <h3 class="settings-section-title">Anthropic API (Usage &amp; Cost)</h3>
+        <p class="setting-hint setting-note">Requires an Admin API key (<code>sk-ant-admin...</code>). Available for organization accounts only. Get yours from <a href="https://console.anthropic.com/settings/admin-keys" target="_blank" rel="noopener">Console &rarr; Settings &rarr; Admin Keys</a>.</p>
+        <div class="setting-group">
+          <label>Admin API Keys</label>
+          <div id="admin-keys-list"></div>
+          <button type="button" id="add-admin-key" class="btn-small">+ Add Key</button>
+        </div>
+        <div class="setting-group">
+          <label for="set-sync-days">Sync window (days)</label>
+          <div class="setting-input-row">
+            <input type="number" id="set-sync-days" min="1" max="365" value="30" style="max-width:100px">
+          </div>
+          <p class="setting-hint">How many days of API history to fetch (1–365)</p>
+        </div>
+
+        <h3 class="settings-section-title">OpenAI</h3>
+        <div class="setting-group">
+          <label for="set-openai-file">Usage file <span class="optional">(optional)</span></label>
+          <div class="setting-input-row">
+            <input type="text" id="set-openai-file" placeholder="/path/to/openai-usage.csv">
+            <span class="validate-indicator" id="val-openai-file"></span>
+          </div>
+          <p class="setting-hint">CSV, JSON, or JSONL file with OpenAI usage data</p>
+        </div>
+        <div class="setting-group">
+          <label for="set-openai-dir">Logs directory <span class="optional">(optional)</span></label>
+          <div class="setting-input-row">
+            <input type="text" id="set-openai-dir" placeholder="/path/to/openai-logs/">
+            <span class="validate-indicator" id="val-openai-dir"></span>
+          </div>
+          <p class="setting-hint">Directory containing OpenAI API response JSONL logs</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span id="settings-status" class="settings-status"></span>
+        <button id="settings-save" class="btn-primary">Save &amp; Reload</button>
+      </div>
+    </div>
+  </div>
+
+  <script defer src="app.js?v=13"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "name": "costbuster",
+  "version": "1.0.0",
+  "description": "Local dashboard for tracking Anthropic and OpenAI API usage costs",
+  "main": "src/index.js",
+  "bin": {
+    "costbuster": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "npx nodemon src/index.js",
+    "test": "node --test test/parsers.test.js test/anthropic-api.test.js"
+  },
+  "keywords": ["anthropic", "openai", "cost", "tokens", "dashboard"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IOANNISMICHAEL/costBuster.git"
+  },
+  "homepage": "https://github.com/IOANNISMICHAEL/costBuster#readme",
+  "bugs": {
+    "url": "https://github.com/IOANNISMICHAEL/costBuster/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "open": "^10.1.0"
+  }
+}

@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Secrets and environment files (never commit)
+.env
+.env.local
+.env.*
+.env.*.local
+
+# User settings directory (outside repo, but listed for clarity)
+# ~/.costbuster/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+npm-debug.log*
+.npm
+
+# Test coverage (if added later)
+coverage/
+.nyc_output/
+
+# Development/IDE configuration (not needed for pipeline)
+.cursor/
+docs/

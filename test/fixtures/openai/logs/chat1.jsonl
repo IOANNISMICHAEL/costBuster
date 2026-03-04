@@ -1,0 +1,2 @@
+{"id":"chatcmpl-abc123","object":"chat.completion","created":1700000000,"model":"gpt-4o","usage":{"prompt_tokens":1200,"completion_tokens":350,"total_tokens":1550},"choices":[]}
+{"id":"chatcmpl-abc124","object":"chat.completion","created":1700000100,"model":"gpt-4o-mini","usage":{"prompt_tokens":800,"completion_tokens":200,"total_tokens":1000},"choices":[]}
